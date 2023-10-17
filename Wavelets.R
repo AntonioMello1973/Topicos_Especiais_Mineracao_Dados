@@ -1,27 +1,27 @@
-# Instale e carregue a biblioteca 'wavelets'
 library(wavelets)
+library(ggplot2)
 
-# Crie uma série temporal de exemplo (substitua pelo seu próprio conjunto de dados)
 set.seed(123)
-dados <- ts(rnorm(100), start = 1)
+n <- 500
+t <- 1:n
+data <- sin(2*pi*t/50) + rnorm(n)*0.5
+data[240:260] <- data[240:260] + 5  # Adiciona uma anomalia
 
-# Realize a transformada de wavelet usando a função wt
-transformacao_wavelet <- dwt(dados, filter = "haar")
+plot(data)
 
-# Visualize os coeficientes de wavelet
-plot(transformacao_wavelet)
+wt <- dwt(data, filter="la8", n.levels=4)
 
-# Defina um limiar para identificar anomalias
-limiar <- 2.0  # Ajuste o valor do limiar conforme necessário
+threshold <- 3.5
+anomaly <- which(abs(wt@V$V1) > threshold)
+print(paste("anomalia=", anomaly))
+# V1 tem metade dos elementos que a série temporal original, desta forma, para representar corretamente no gráfico,
+# devemos multiplicar os índices de anomalia por 2
+anomaly <- (anomaly-1) * 2
+print(paste("anomalia ajustada=", anomaly))
 
-# Identifique anomalias comparando os coeficientes de wavelet com o limiar
-anomalias <- transformacao_wavelet@W > limiar
 
-# Visualize as anomalias detectadas na série temporal original
-plot(dados, type = "l", ylim = c(min(dados), max(dados)), xlab = "Tempo", ylab = "Valor", main = "Série Temporal com Anomalias")
-points(which(anomalias), dados[anomalias], col = "red", pch = 19)
-
-# Exemplo de como você pode identificar os índices das anomalias
-indices_anomalias <- which(anomalias)
-print("Índices das Anomalias:")
-print(indices_anomalias)
+ggplot() + 
+  geom_line(aes(x=t, y=data), color="blue") +
+  geom_point(aes(x=t[anomaly], y=data[anomaly]), color="red", size=3) +
+  labs(title="Detecção de Anomalias com Transformada Wavelet", x="Tempo", y="Valor") +
+  theme_minimal()

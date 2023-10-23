@@ -9,11 +9,6 @@ y <- data$temperature
 yts <- ts(y, start = c(1850, 1))
 xts <- time(yts)
 
-#ts_data <- arima.sim(list(order=c(1,0,0), ar=0.8), n=100)+10
-#y <- ts_data
-#yts <- ts(y)
-#autoplot(ts(y))
-
 #decompose the time series by maximal overlap discrete wavelet transform
 wavelet_components <- WaveletT(y, filter="haar") #"haar", "d4", "la8", "bl14", "c6"
 #get wavelet object (necessary for reverse transforming)

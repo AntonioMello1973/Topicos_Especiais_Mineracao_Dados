@@ -1,35 +1,30 @@
 library(wavelets)
 library(ggplot2)
-set.seed(123)
+library("harbinger")
+data(har_examples)
 
-# Gerando dados sintéticos
-n <- 550
-t <- 1:n
-data <- sin(2*pi*t/50) + rnorm(n)*0.5
-data[241:260] <- data[241:260] + 5  # Adiciona uma anomalia
-
-plot(data, main = "Dados originais")
+data <- har_examples$example6$serie # Tratar exemplos 3 e 6 eliminando "anomaly_wavelet" nas primeiras e últimas posições
+plot(data, main = "Dados originais", type="l")
 
 # Realizando a Transformada Wavelet Discreta
 wt <- dwt(data, filter="la8", n.levels=2) # "haar", "d4", "la8", "bl14", "c6"
 
 # Analisando os coeficientes Wavelet
 plot(wt@W$W1, main = "Coeficientes Wavelet (W1)")
-boxplot_wavelet <- boxplot(wt@W$W1, main = "Coeficientes Wavelet (W1)")
-print(boxplot_wavelet$stats)
 
-# Identificando anomalias a partir dos coeficientes Wavelet
-threshold_high <- boxplot_wavelet$stats[5]
-threshold_low  <- boxplot_wavelet$stats[1]
-#anomaly_wavelet <- which(abs(wt@W$W1) > threshold)
-anomaly_wavelet <- which(wt@W$W1 > threshold_high | wt@W$W1 < threshold_low)
+print(paste("Dica de limiar:", max(abs(wt@W$W1))))
+
+threshold <- 0.3
+anomaly_wavelet <- which(abs(wt@W$W1) > threshold)
 
 print(paste("anomalia Wavelet (coeficientes Wavelet)=", anomaly_wavelet))
 # W1 tem metade dos elementos que a série temporal original, desta forma, para representar corretamente no gráfico,
 # devemos multiplicar os índices de anomalia por 2
-anomaly <- (anomaly_wavelet * n / 275) - 3
+anomaly <- (anomaly_wavelet * length(data) / length(wt@W$W1)) - 4
+anomaly <-  anomaly[anomaly > 0]
 print(paste("anomalia ajustada=", anomaly))
 
+t <- 1:length(data)
 ggplot() + 
   geom_line(aes(x=t, y=data), color="blue") +
   geom_point(aes(x=t[anomaly], y=data[anomaly]), color="red", size=3) +
@@ -37,22 +32,28 @@ ggplot() +
   theme_minimal()
 
 
+
+
+
+
+
+
+
+
 # Analisando os coeficientes de escala
 plot(wt@V$V1, main = "Coeficientes de escala (V1)")
-boxplot_escala <- boxplot(wt@V$V1, main = "Coeficientes de escala (V1)")
-print(boxplot_escala$stats)
 
 # Identificando anomalias a partir dos coeficientes de escala
-threshold_high <- boxplot_escala$stats[5]
-threshold_low  <- boxplot_escala$stats[1]
+threshold_high <- 1.7
+threshold_low  <- -1.7
 anomaly_scale <- which(wt@V$V1 > threshold_high | wt@W$W1 < threshold_low)
 print(paste("anomalia Wavelet (coeficientes de escala)=", anomaly_scale))
 # V1 tem metade dos elementos que a série temporal original, desta forma, para representar corretamente no gráfico,
 # devemos multiplicar os índices de anomalia por 2
-anomaly <- (anomaly_scale * length(data) / 275) - 3
+anomaly <- (anomaly_scale * length(data) / length(wt@V$V1)) - 4
 print(paste("anomalia ajustada=", anomaly))
 
-
+t <- 1:length(data)
 ggplot() + 
   geom_line(aes(x=t, y=data), color="blue") +
   geom_point(aes(x=t[anomaly], y=data[anomaly]), color="red", size=3) +

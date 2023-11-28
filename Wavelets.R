@@ -3,8 +3,6 @@ library(ggplot2)
 library("harbinger")
 data(har_examples)
 
-data <- har_examples$example1$serie 
-
 exemplos <- list(har_examples$example1$serie, har_examples$example2$serie, har_examples$example3$serie,
                  har_examples$example4$serie, har_examples$example5$serie, har_examples$example6$serie,
                  har_examples$example7$serie, har_examples$example8$serie)
